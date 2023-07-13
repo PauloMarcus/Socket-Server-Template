@@ -4,8 +4,8 @@ const app = express();
 
 app.use(express.static("public"));
 // require("dotenv").config();
-
-const serverPort = process.env.PORT || 3000;
+app.use(express.json());
+const serverPort = process.env.PORT || 3005;
 const server = http.createServer(app);
 const WebSocket = require("ws");
 
@@ -37,6 +37,16 @@ wss.on("connection", function (ws, req) {
     broadcast(ws, stringifiedData, false);
   });
 
+  ws.on("message", (data) => {
+    
+    console.log('message ' + data)
+  });
+
+  ws.on("post", (data) => {
+    
+    console.log('message ' + data)
+  });
+
   ws.on("close", (data) => {
     console.log("closing connection");
 
@@ -57,8 +67,9 @@ const broadcast = (ws, message, includeSelf) => {
     });
   } else {
     wss.clients.forEach((client) => {
+      const notificationData = JSON.stringify(message.body);
       if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(message);
+        client.send(notificationData);
       }
     });
   }
@@ -80,4 +91,10 @@ const broadcast = (ws, message, includeSelf) => {
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
+});
+
+app.post('/', (req, res) => {
+  broadcast('', req, '')
+  console.log(req.body)
+  res.send({"sent" : req.body})
 });
